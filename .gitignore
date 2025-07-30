@@ -1,2 +1,9 @@
 # Project exclude paths
 /java/target/
+/java/target/**
+/java/.serverless/
+/java/.serverless/**
+/node/.serverless/
+/node/.serverless/**
+/node/node_modules/
+/node/node_modules/**
