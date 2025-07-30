@@ -1,0 +1,46 @@
+service: users-api
+
+custom:
+  usersTableName: users-table-${sls:stage}
+
+provider:
+  name: aws
+  stage: dev
+  region: us-east-1
+  environment:
+    USERS_TABLE: ${self:custom.usersTableName}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:*
+          Resource:
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.usersTableName}
+
+resources:
+  Resources:
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.usersTableName}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+  Outputs:
+    UsersTableArn:
+      Description: ARN de la tabla de usuarios
+      Value: !GetAtt usersTable.Arn
+      Export:
+        Name: ${self:service}:${sls:stage}:UsersTableArn
+
+    UsersTableName:
+      Description: Nombre de la tabla de usuarios
+      Value: !Ref usersTable
+      Export:
+        Name: ${self:service}:${sls:stage}:UsersTableName

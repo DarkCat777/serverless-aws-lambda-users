@@ -1,0 +1,44 @@
+service: users-node-ts-api
+
+plugins:
+  - serverless-esbuild
+
+custom:
+  esbuild:
+    minify: true
+    watch:
+      pattern: [ 'src/**/*.ts' ] # default .
+      ignore: [ '.serverless/**/*', '.build' ]
+  usersTableName: users-table-${sls:stage}
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: dev
+  region: us-east-1
+  environment:
+    USERS_TABLE_NAME: ${self:custom.usersTableName}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:Scan
+            - dynamodb:Query
+          Resource:
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.usersTableName}
+functions:
+  createUser:
+    handler: src/infrastructure/port/input/handler/createUser.main
+    events:
+      - http:
+          path: users
+          method: post
+  listUsers:
+    handler: src/infrastructure/port/input/handler/listUsers.main
+    events:
+      - http:
+          path: users
+          method: get

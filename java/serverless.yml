@@ -1,0 +1,39 @@
+service: users-java-api
+
+custom:
+  usersTableName: users-table-${sls:stage}
+
+provider:
+  name: aws
+  runtime: java21
+  stage: dev
+  region: us-east-1
+  environment:
+    USERS_TABLE_NAME: ${self:custom.usersTableName}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Scan
+            - dynamodb:Query
+          Resource:
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.usersTableName}
+package:
+  artifact: target/java-user-func.jar
+functions:
+  updateUser:
+    handler: com.pragma.users.infrastructure.port.input.handler.UpdateUserHandler
+    events:
+      - http:
+          path: users/{id}
+          method: put
+  deleteUser:
+    handler: com.pragma.users.infrastructure.port.input.handler.DeleteUserHandler
+    events:
+      - http:
+          path: users/{id}
+          method: delete
